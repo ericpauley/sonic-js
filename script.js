@@ -67,8 +67,8 @@ function handleTick(event){
     ship.x = Math.min(Math.max(ship.x,10),width-10)
     ship.y += down*event.delta*shipSpeed*speed;
     ship.y = Math.min(Math.max(ship.y,10),height-10)
-    if(event.runTime > lastWave + 250){
-      lastWave += 250;
+    if(event.runTime > lastWave + 500){
+      lastWave += 500;
       var wave = new createjs.Shape();
       wave.x = ship.x;
       wave.y = ship.y;
@@ -86,7 +86,7 @@ function handleTick(event){
       (height-wave.x)*(height-wave.x) + (width-wave.y)*(width-wave.y) < radius*radius){
         stage.removeChild(wave)
       }else{
-        wave.graphics.clear().setStrokeStyle(5).beginStroke("rgba(255,255,255,"+Math.min(100/radius,1)+")").drawCircle(0, 0, radius)
+        wave.graphics.clear().setStrokeStyle(10).beginStroke("rgba(255,255,255,"+Math.min(100/radius,1)+")").drawCircle(0, 0, radius)
         newWaves.push(wave)
       }
     }
