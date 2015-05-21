@@ -5,13 +5,14 @@ for(var i = 0;i<255;i++){
 var shipSpeed = .9
 var speed = .25
 var paused = false;
+var focus = true;
+ship = {}
 
 $(window).keydown(function(e){
   keys[e.which] = 1
   switch(e.which){
     case 80:
     paused = !paused;
-    createjs.Ticker.paused = paused
     break;
     case 49:
     shipSpeed = .1
@@ -35,9 +36,9 @@ $(window).keydown(function(e){
 })
 
 $(window).focus(function() {
-  createjs.Ticker.paused = paused;
+  focus = true;
 }).blur(function() {
-  createjs.Ticker.paused = true;
+  focus = false;
 });
 
 $(window).keyup(function(e){
@@ -46,15 +47,24 @@ $(window).keyup(function(e){
 
 var waves = []
 var lastWave = 0
+var last = Date.now()
+var runTime = 0
 
-function handleTick(event){
-  var canvas = document.getElementById("canvas");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  width = canvas.width
-  height = canvas.height
-  radius = Math.sqrt(width*width+height*height)
+function handleTick(){
+  var now = Date.now()
+  event = {delta:now-last, paused:!focus || paused}
   if(!event.paused){
+    runTime += event.delta
+  }
+  event.runTime = runTime
+  last = now
+  if(!event.paused){
+    canvas = document.getElementById("canvas");
+    context = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    width = canvas.width
+    height = canvas.height
     var down = keys[83] + keys[40] - keys[87] - keys[38];
     var right = keys[68] + keys[39] - keys[65] - keys[37];
     down = Math.min(Math.max(down,-1),1)
@@ -67,48 +77,53 @@ function handleTick(event){
     ship.x = Math.min(Math.max(ship.x,10),width-10)
     ship.y += down*event.delta*shipSpeed*speed;
     ship.y = Math.min(Math.max(ship.y,10),height-10)
-    if(event.runTime > lastWave + 500){
-      lastWave += 500;
-      var wave = new createjs.Shape();
+    if(event.runTime > lastWave + 250){
+      lastWave += 250;
+      var wave = {};
       wave.x = ship.x;
       wave.y = ship.y;
       wave.created = event.runTime;
-      stage.addChildAt(wave,0);
       waves.push(wave);
     }
-    var newWaves = []
+    context.lineWidth = 5
+    newWaves = []
     for(var i = 0;i<waves.length;i++){
       var wave = waves[i];
-      var radius = (event.runTime-wave.created)*speed
+      var radius = wave.radius
       if(wave.x*wave.x + wave.y*wave.y < radius*radius &&
-      (height-wave.x)*(height-wave.x) + wave.y*wave.y < radius*radius &&
-      wave.x*wave.x + (width-wave.y)*(width-wave.y) < radius*radius &&
-      (height-wave.x)*(height-wave.x) + (width-wave.y)*(width-wave.y) < radius*radius){
-        stage.removeChild(wave)
+      (width-wave.x)*(width-wave.x) + wave.y*wave.y < radius*radius &&
+      wave.x*wave.x + (height-wave.y)*(height-wave.y) < radius*radius &&
+      (width-wave.x)*(width-wave.x) + (height-wave.y)*(height-wave.y) < radius*radius){
+
       }else{
-        wave.graphics.clear().setStrokeStyle(10).beginStroke("rgba(255,255,255,"+Math.min(100/radius,1)+")").drawCircle(0, 0, radius)
+        var radius = (event.runTime-wave.created)*speed
+        wave.radius = radius;
+        context.beginPath()
+        context.arc(wave.x, wave.y, radius, 0, 2*Math.PI, false);
+        context.strokeStyle = "rgba(255,255,255,"+Math.min(100/radius,1)+")"
+        context.stroke()
         newWaves.push(wave)
       }
     }
-    console.log(newWaves.length)
     waves = newWaves
+    context.beginPath();
+    context.arc(ship.x, ship.y, 10, 0, 2 * Math.PI, false);
+    context.fillStyle = "green";
+    context.fill()
   }
-  stage.update()
+  requestAnimationFrame(handleTick)
 }
 
 function init(){
   var canvas = document.getElementById("canvas");
+  context = canvas.getContext('2d');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  width = canvas.width
-  height = canvas.height
-  stage = new createjs.Stage("canvas");
-  ship = new createjs.Shape();
-  ship.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 10);
-  ship.x = width/2;
-  ship.y = width/2;
-  stage.addChild(ship);
-  stage.update();
-  createjs.Ticker.framerate = 60
-  createjs.Ticker.addEventListener("tick", handleTick);
+  ship.x = canvas.width/2;
+  ship.y = canvas.height/2;
+  context.beginPath();
+  context.rect(0,0,canvas.width,canvas.height);
+  context.fillStyle = "black"
+  context.fill()
+  handleTick()
 }
