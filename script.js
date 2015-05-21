@@ -3,7 +3,7 @@ for(var i = 0;i<255;i++){
   keys[i] = 0
 }
 var shipSpeed = .9
-var speed = .25
+var speed = .07
 var paused = false;
 var focus = true;
 ship = {}
@@ -103,21 +103,18 @@ function gameTick(event){
     wave.created = event.runTime;
     waves.push(wave);
   }
-  context.lineWidth = 5
+  context.lineWidth = 3
   newWaves = []
   for(var i = 0;i<waves.length;i++){
     var wave = waves[i];
     var radius = wave.radius
-    if(wave.x*wave.x + wave.y*wave.y < radius*radius &&
-    (width-wave.x)*(width-wave.x) + wave.y*wave.y < radius*radius &&
-    wave.x*wave.x + (height-wave.y)*(height-wave.y) < radius*radius &&
-    (width-wave.x)*(width-wave.x) + (height-wave.y)*(height-wave.y) < radius*radius){
+    if(radius > 750){
     }else{
       var radius = (event.runTime-wave.created)*speed
       wave.radius = radius;
       context.beginPath()
       context.arc(wave.x, wave.y, radius, 0, 2*Math.PI, false);
-      context.strokeStyle = "rgba(255,255,255,"+Math.min(100/radius,1)+")"
+      context.strokeStyle = "rgba(255,255,255,"+((1-radius/750)*(100/radius))+")"
       context.stroke()
       newWaves.push(wave)
     }
