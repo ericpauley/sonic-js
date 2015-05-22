@@ -6,6 +6,7 @@ var shipSpeed = .9
 var speed = .07
 var paused = false;
 var focus = true;
+var waveTime = 300;
 ship = {}
 
 $(window).keydown(function(e){
@@ -54,12 +55,12 @@ function tick(){
   var now = Date.now()
   var isPaused = paused// || !focus
   if(!isPaused){
-    var delta = Math.min(now-last, 250)
-    if(runTime + delta > lastWave + 250){
-      delta = lastWave+250-runTime
-      runTime = lastWave + 250
+    var delta = Math.min(now-last, waveTime)
+    if(runTime + delta > lastWave + waveTime){
+      delta = lastWave+waveTime-runTime
+      runTime = lastWave + waveTime
       last += delta
-      gameTick({delta:delta-(runTime-(lastWave+250)), paused:isPaused, runTime:lastWave + 250})
+      gameTick({delta:delta-(runTime-(lastWave+waveTime)), paused:isPaused, runTime:lastWave + waveTime})
     }else{
       runTime += delta
       gameTick({delta:delta, paused:isPaused, runTime:runTime})
@@ -81,6 +82,7 @@ function gameTick(event){
     canvas.height = window.innerHeight;
     width = canvas.width
     height = canvas.height
+    sRadius = Math.sqrt(width*width+height*height)
   }
   context.clearRect(0,0,width,height)
   var down = keys[83] + keys[40] - keys[87] - keys[38];
@@ -95,26 +97,29 @@ function gameTick(event){
   ship.x = Math.min(Math.max(ship.x,10),width-10)
   ship.y += down*event.delta*shipSpeed*speed;
   ship.y = Math.min(Math.max(ship.y,10),height-10)
-  if(event.runTime >= lastWave + 250){
-    lastWave += 250;
+  if(event.runTime >= lastWave + waveTime){
+    lastWave += waveTime;
     var wave = {};
     wave.x = ship.x;
     wave.y = ship.y;
     wave.created = event.runTime;
     waves.push(wave);
   }
-  context.lineWidth = 3
+  context.lineWidth = 1
   newWaves = []
   for(var i = 0;i<waves.length;i++){
     var wave = waves[i];
     var radius = wave.radius
-    if(radius > 750){
+    if(radius > sRadius){
     }else{
       var radius = (event.runTime-wave.created)*speed
       wave.radius = radius;
       context.beginPath()
-      context.arc(wave.x, wave.y, radius, 0, 2*Math.PI, false);
-      context.strokeStyle = "rgba(255,255,255,"+((1-radius/750)*(100/radius))+")"
+      for(var r=0;r>-3;r-=.5){
+        context.moveTo(wave.x+Math.max(radius+r,0), wave.y)
+        context.arc(wave.x, wave.y, Math.max(radius+r,0), 0, 2*Math.PI, false);
+      }
+      context.strokeStyle = "rgba(255,255,255,"+((75/radius))+")"
       context.stroke()
       newWaves.push(wave)
     }
@@ -133,6 +138,7 @@ function init(){
   canvas.height = window.innerHeight;
   width = canvas.width;
   height = canvas.height;
+  sRadius = Math.sqrt(width*width+height*height)
   ship.x = canvas.width/2;
   ship.y = canvas.height/2;
   tick()
