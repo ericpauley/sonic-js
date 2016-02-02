@@ -33,6 +33,9 @@ $(window).keydown(function(e){
     case 54:
     shipSpeed = 1.5
     break;
+    case 55:
+    shipSpeed = 2.0
+    break;
   }
 })
 
